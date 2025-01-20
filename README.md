@@ -16,5 +16,8 @@
  Python. Posteriormente, se incorporarán herramientas como pandas y seaborn para
  facilitar el análisis de grandes volúmenes de datos y la visualización de resultados.
 
- 
+ Originalmente se tienen los datos de las películas en un archivo excel compuesto por 28 columnas y 
+ 5043 filas. 
+
+ Se presentarán diferentes archivos en este proyectoPeliculas realizando consultas acerca de estos datos. 
  
