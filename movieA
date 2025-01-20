@@ -1,0 +1,201 @@
+import csv
+# Ruta del archivo CSV 
+MOVIES_DATA = "movie_data.csv"
+
+#A.1. EXPLORACION INICIAL BASICA DEL ARCHIVO DE DATOS
+def load_full_data(file_path):
+    """
+    Carga el encabezado y las filas de datos de un archivo CSV
+
+    Parameters
+    ----------
+    file_path : str
+        La ruta al archivo CSV que se va a leer. 
+
+    Returns
+    -------
+    full_header : list of str
+        Lista con los encabezados de las columnas del archivo CSV. 
+    full_list_data : list of list
+        Lista de filas del archivo CSV, donde cada fila es una lista con valores 
+        de distintos tipos (por ejemplo, enteros y cadenas). 
+
+    """
+    with open(file_path, mode='r', encoding='utf-8') as archivo:
+        lector_csv = csv.reader(archivo)
+        
+        # Leer el encabezado
+        full_header = next(lector_csv)  # Lee la primera fila como encabezado
+        
+        # Leer el resto de las filas
+        full_list_data = [fila for fila in lector_csv]  # Crea una lista de las filas restantes
+
+    return full_header, full_list_data
+ 
+
+# Probar la funcion
+full_header, full_list_data = load_full_data(MOVIES_DATA)
+print(full_header)
+print()
+print(full_list_data[0:5])
+print()
+
+# Enumerar los encabezados para obtener sus posiciones
+list_of_enumerated_headers = list(enumerate(full_header))
+print(list_of_enumerated_headers)
+#enumerate(full_header) de alguna manera es como que nos da el rango de 0-n donde n es el numero de elementos que tiene la lista full_header
+
+
+#A.2. CAMPOS PRINCIPALES DE UNA PELICULA
+def main_data_from_item(item):
+    """
+
+    Extrae los principales campos de interés de una película desde una lista de datos.
+    Parameters
+    ----------
+    item : list
+        Lista que representa los datos de una película, donde cada índice corresponde a un campo.
+
+    Returns
+    -------
+    datos_interesantes : list
+        Lista de valores de los campos principales de una película
+
+    """
+    # Lista de campos que nos interesan
+    campos_interesantes = [
+        'movie_title', 'title_year', 'director_name', 
+        'actor_1_name', 'language', 'country', 
+        'color', 'budget', 'imdb_score', 'movie_imdb_link'
+    ]
+    
+    # Crear un diccionario que asocie cada campo con su indice
+    indices = {campo: index for index, campo in enumerate(full_header)}
+    
+    # Extraer los datos correspondientes a los campos de interes
+    datos_interesantes = [item[indices[campo]] for campo in campos_interesantes]
+    
+    return datos_interesantes
+
+
+# Probar la funcion con los datos ya cargados
+print()
+print()
+print(main_data_from_item(full_header))
+print()
+datos_avatar_2009 = main_data_from_item(full_list_data[0])
+print(datos_avatar_2009)
+print()
+datos_star_wars_7 = main_data_from_item(full_list_data[4])
+print(datos_star_wars_7)
+print()
+print()
+
+#A.3. ALGUNOS AJUSTES EN LOS CAMBIOS
+
+def datatypes_arranged(data):
+    """
+    
+    Ajusta los tipos de datos y limpia los valores de los campos principales de una película.
+    
+    Parameters
+    ----------
+    data : list
+        Lista de valores de los principales campos de una película.
+
+    Returns
+    -------
+    list
+        Lista con los campos ajustados: título sin espacios en blanco, año como entero,
+        presupuesto como entero, puntuación de IMDb como flotante y enlace limpio.
+
+    """
+    # Limpiar el titulo de la pelicula
+    movie_title = data[0].strip()  # Eliminar espacios en blanco
+    # Convertir el ano
+    title_year = int(data[1]) if data[1].strip() else -1
+        #data[1].strip() devuelve una cadena sin espacios al principio o al final.
+        #Si el resultado es una cadena vacía (por ejemplo, si data[1] era solo
+        # espacios o estaba vacío), la condición se evalúa como False
+    # Obtener el nombre del director
+    director_name = data[2]
+    # Obtener el nombre del primer actor
+    actor_1_name = data[3]
+    # Obtener el idioma
+    language = data[4]
+    # Obtener el país
+    country = data[5]
+    # Obtener el color
+    color = data[6]
+    # Convertir el presupuesto
+    budget = int(data[7]) if data[7].strip() else -1
+    # Convertir la valoracion a float
+    imdb_score = float(data[8])
+    # Limpiar la URL
+    movie_imdb_link = data[9].split('?')[0]  # Eliminar cualquier fragmento despues de ?
+        #El metodo split() divide una cadena en una lista de subcadenas, utilizando el delimitador '?'.
+        #Tomamos el primer elemento de las dos cadenas que es el que nos interesa, el otro nada
+
+    return [movie_title, title_year, director_name, actor_1_name, language, country, color, budget, imdb_score, movie_imdb_link]
+
+# Prueba de funcionamiento
+print(datatypes_arranged(datos_avatar_2009))
+print(datatypes_arranged(datos_star_wars_7))
+print()
+print()
+
+#A.4. RECUPERACION DE ALGUNA INFORMACION BASICA
+
+def colores(full_list_data):
+    """
+    Recupera los valores únicos de colores de una lista de películas.
+    
+
+    Parameters
+    ----------
+    full_list_data : list of list
+        Lista de listas donde cada sublista representa los datos de una película.
+
+    Returns
+    -------
+    set
+        Conjunto de valores únicos de color en las películas, incluyendo valores vacíos
+
+    """
+    colores_set = set()  # Usamos un conjunto para almacenar valores unicos
+    for fila in full_list_data:
+        color = fila[full_header.index('color')]  # Obtener el color del indice de color
+        colores_set.add(color)
+    return colores_set  # Convertir a lista para retornar
+
+def peliculas_victor(full_list_data):
+    """
+    Obtiene una lista de películas que contienen la palabra "Victor" en su título,
+    junto con la cantidad de reseñas de críticos.
+
+    Parameters
+    ----------
+    full_list_data : list of list
+        Lista de listas donde cada sublista representa los datos de una película.
+
+    Returns
+    -------
+    peliculas_victor : list of tuple
+        Lista de tuplas donde cada tupla contiene el título de la película y
+        la cantidad de reseñas de críticos.
+
+    """
+    peliculas_victor = []  # Lista para almacenar titulos y cantidad de calificadores
+    for fila in full_list_data:
+        titulo = fila[full_header.index('movie_title')].strip()  # Obtener y limpiar el título del indice movie_title
+        cantidad_calificadores = fila[full_header.index('num_critic_for_reviews')].strip()
+        if "Victor" in titulo:  # Comprobar si "Victor" esta en el título
+            peliculas_victor.append((titulo, cantidad_calificadores))  # Agregar tupla a la lista
+    return peliculas_victor
+
+colores=colores(full_list_data)
+pelis_victor=peliculas_victor(full_list_data)
+
+# Prueba de funcionamiento
+print(colores)
+print(pelis_victor)
