@@ -1,0 +1,342 @@
+import csv
+from pprint import pprint
+# Ruta del archivo CSV 
+MOVIES_DATA = "movie_data.csv"
+
+
+
+#B.1. CARGA UNICAMENTE DE DATOS QUE VAMOS A USAR
+def load_main_data(file_path):
+    """
+    Carga únicamente los datos relevantes de una película desde un archivo CSV.
+
+    Parameters
+    ----------
+    file_path : str
+        La ruta del archivo CSV que contiene los datos de las películas.
+
+    Returns
+    -------
+    main_header : list of str
+        Lista de los nombres de las columnas seleccionadas.
+    main_dict_data : dict
+        Diccionario con claves (título, año) y valores en listas de datos de interés para cada película.
+
+    """
+    # Definir las columnas que nos interesan
+    columnas_interes = ['movie_title', 'title_year', 'director_name', 'actor_1_name', 
+                        'language', 'country', 'color', 'budget', 'imdb_score', 'movie_imdb_link']
+    
+    # Inicializamos el diccionario donde almacenaremos los datos de interés
+    main_dict_data = {}
+    
+    # Abrir el archivo CSV
+    with open(file_path, mode='r', encoding='utf-8') as archivo:
+        lector_csv = csv.reader(archivo)
+        
+        # Leer el encabezado completo
+        full_header = next(lector_csv)
+        
+        # Encontrar los índices de las columnas que nos interesan
+        indices_interes = [full_header.index(campo) for campo in columnas_interes]
+        
+        # Cargar el resto de las filas
+        for fila in lector_csv:
+            # Extraer los datos de interés según los índices
+            data_interes = [fila[i] for i in indices_interes]
+            
+            # Limpiar y ajustar los datos
+            movie_title = data_interes[0].strip()  # Eliminar espacios innecesarios
+            title_year = int(data_interes[1]) if data_interes[1].strip() else -1  # Convertir el año o imputar -1 si está vacío
+            director_name = data_interes[2].strip()
+            actor_1_name = data_interes[3].strip()
+            language = data_interes[4].strip()
+            country = data_interes[5].strip()
+            color = data_interes[6].strip()
+            budget = int(data_interes[7]) if data_interes[7].strip() else -1  # Convertir el presupuesto o imputar -1 si está vacío
+            imdb_score = float(data_interes[8])  # Convertir a float la puntuación de IMDb
+            movie_imdb_link = data_interes[9].split('?')[0]  # Eliminar cualquier fragmento después de ?
+            
+            # Crear la clave (título, año)
+            clave = (movie_title, title_year)
+            
+            # Solo agregar si la película no está ya en el diccionario
+            if clave not in main_dict_data:
+                main_dict_data[clave] = [director_name, actor_1_name, language, country, 
+                                         color, budget, imdb_score, movie_imdb_link]
+
+    # Devolver los encabezados seleccionados y el diccionario con los datos
+    main_header = columnas_interes
+    return main_header, main_dict_data
+print()
+# Prueba de funcionamiento
+main_header, main_dict_data = load_main_data(MOVIES_DATA)
+print(main_header)
+for title_year, pieces in list(main_dict_data.items())[:5]:
+ print(title_year, " -> ", pieces)
+print()
+print()
+#El método .items() devuelve una vista de los pares clave-valor del diccionario
+#donde: Cada clave es el título y año de la película. 
+#Cada valor es una lista con el resto de los datos de interés de esa película.
+#pongo list porque sino no puedo acotarlo a los 5 primeros, si quitasemos eso, podriamos quitar list
+
+full_list_data=[12,34,56]
+del full_list_data
+# Prueba de funcionamiento
+try:
+    print(full_list_data)
+except NameError:
+    print('La variable full_list_data está suprimida correctamente')
+print()
+print()
+
+
+
+
+#B.2.RECUPERACION DE ALGUNA INFORMACION
+#Titulo y año de las peliculas dirigidas por un director dado
+def movies_anno_for_director(main_dict_data, director_name):
+    """
+    Obtiene el título y año de las películas dirigidas por un director dado.
+
+    Parameters
+    ----------
+    main_dict_data : dict
+        Diccionario de datos principales de películas, con claves (título, año) 
+        y valores en listas de detalles.
+    director_name : str
+        Nombre del director cuya filmografía se desea obtener.
+
+    Returns
+    -------
+    list of tuple
+        Lista de tuplas que contiene el título y el año de cada película dirigida
+        por el director especificado.
+
+    """
+    
+    result = []
+    # Iterar sobre el diccionario
+    for (title, year), pieces in main_dict_data.items():
+       director = pieces[0]  # El director es el primer elemento de la lista de piezas
+       if director == director_name:
+           result.append((title, year))  # Agregar el título y el año a la lista de resultados
+    return pprint(result)
+# Prueba de funcionamiento
+movies_anno_for_director(main_dict_data, "James Cameron")
+print()
+print()
+
+#Muestra el nombre del director con mas peliculas y dicho numero de peliculas
+def directors_max_movies(main_dict_data):
+    """
+    Muestra el director con el mayor número de películas y el conteo de estas.
+
+    Parameters
+    ----------
+    main_dict_data : dict
+        Diccionario de datos principales de películas, con claves (título, año)
+        y valores en listas de detalles.
+
+    Returns
+    -------
+    directors_with_max : list of str
+        Lista con el nombre o nombres de los directores que tienen el mayor 
+        número de películas dirigidas.
+    max_movies : int
+        Número máximo de películas dirigidas por el director o directores indicados.
+
+    """
+    # Diccionario para contar cuántas peliculas ha dirigido cada director
+    director_count = {}
+    # Contar las películas por director
+    for (title, year), pieces in main_dict_data.items():
+        director = pieces[0]  # El director es el primer elemento de la lista de piezas
+        if director.strip() != "":
+            if director in director_count:
+                director_count[director] += 1
+            else:
+                director_count[director] = 1
+    # Encontrar el número máximo de películas dirigidas
+    max_movies = max(director_count.values())
+    # Filtrar los directores que han dirigido el número máximo de películas
+    directors_with_max = [director for director, count in director_count.items() if count == max_movies]
+    return directors_with_max, max_movies
+# Prueba de funcionamiento
+print(directors_max_movies(main_dict_data))
+print()
+print()
+
+#Dado un intervalo de años, me devuelve el numero de peliculas en cada año de ese intervalo
+def years_num_movies(main_dict_data, nmin, nmax):
+    """
+    Cuenta el número de películas lanzadas en cada año dentro de un intervalo específico.
+
+
+    Parameters
+    ----------
+    main_dict_data : dict
+        Diccionario de datos principales de películas, con claves (título, año)
+        y valores en listas de detalles.
+    nmin : int
+        Año inicial del intervalo.
+    nmax : int
+        Año final del intervalo.
+
+    Returns
+    -------
+    count : dict
+        Un diccionario donde las claves son años y los valores son el número 
+        de películas lanzadas en esos años.
+
+    """
+    #Diccionario para contar cuantas peliculas hay en cada año
+    count={}
+    #contar las peliculas por año
+    for (title, year), pieces in main_dict_data.items():
+        if year>=nmin and year<=nmax: 
+            if year in count :
+                count[year]+=1
+            else: 
+                count[year]=1
+    return count
+# Prueba de funcionamiento
+num_movies = years_num_movies(main_dict_data, 2000, 2015)
+print(num_movies)
+print()
+
+#Ordena los resultados anteriores en orden ascendente
+num_movies_sorted=sorted(num_movies.items())
+# Prueba de funcionamiento
+print(num_movies_sorted)
+print()
+print()
+
+
+#Partiendo de nuestro diccionario de datos principales generar un archivo con otros datos
+FEW_FIELDS = "algunos_campos.txt"
+def store_file(main_dict_data, output_file):
+    """
+    Almacena datos seleccionados de películas en un archivo de texto con formato CSV.
+
+    Parameters
+    ----------
+    main_dict_data : dict
+        Diccionario de datos principales de películas, con claves (título, año) 
+        y valores en listas de detalles.
+    output_file : str
+        Nombre del archivo de salida donde se guardarán los datos.
+
+    Returns
+    -------
+    None.
+
+    """
+    # Abrimos el archivo para escritura
+    with open(output_file, mode='w', newline='', encoding='utf-8') as archivo:
+        escritor_csv = csv.writer(archivo, delimiter='|')
+        
+        # Iterar sobre los datos del diccionario
+        for (title, year), pieces in main_dict_data.items():
+            language = pieces[2]  # El idioma es el tercer elemento de la lista de piezas
+            country = pieces[3]  # El país es el cuarto elemento de la lista de piezas
+            budget = pieces[5]   # El presupuesto es el sexto elemento de la lista de piezas
+            
+            # Escribir los datos (título, idioma, año, país, presupuesto)
+            escritor_csv.writerow([title, language, year, country, budget])
+
+# Prueba de funcionamiento
+store_file(main_dict_data, FEW_FIELDS)
+print(f"Datos guardados correctamente en {FEW_FIELDS}") #muestra que se guardo
+#! dir algunos*.* #NO ELIMINAR muestra el nombre de los archivos que empiecen por algunos
+print()
+# Verificar los primeros 5 registros del archivo guardado
+with open(FEW_FIELDS, encoding='utf-8') as f:
+    for i in range(5):
+        print(f.readline())
+print()
+print()
+
+
+#B.3.UN CONTENO SENCILLO CON DEFAULTDICT
+#Para cada actor principal, el nº de veces que ha trabajado con cada director
+from collections import defaultdict
+def actor_directors(main_dict_data):
+    """
+    Calcula el número de colaboraciones entre cada actor principal y director.
+
+    Parameters
+    ----------
+    main_dict_data : dict
+        Diccionario de datos principales de películas, con claves (título, año) 
+        y valores en listas de detalles.
+
+    Returns
+    -------
+    actor_director_count : defaultdict
+        Un diccionario que asocia cada actor con otro diccionario donde los directores
+        son las claves y el valor es el número de colaboraciones.
+
+    """
+    # Crear un defaultdict donde cada valor es otro defaultdict con enteros
+    actor_director_count = defaultdict(lambda: defaultdict(int)) #default(int) pone un valor 0 por defecto (si ponemos un actor y directos que no esta, su valor por defecto es 0)
+    # Iterar sobre los datos del diccionario principal
+    for (title, year), pieces in main_dict_data.items():
+        director = pieces[0]  # El director es el primer elemento de la lista de piezas
+        actor = pieces[1]     # El actor principal es el segundo elemento de la lista de piezas
+        if director.strip() and actor.strip():  # Asegurarse de que ni el director ni el actor están vacíos
+            # Aumentar el contador para ese actor y director
+            actor_director_count[actor][director] += 1
+    return actor_director_count
+
+# Prueba de funcionamiento
+num_collaborations = actor_directors(main_dict_data)
+# Mostrar el tipo de las variables como en el test de funcionamiento
+print(type(num_collaborations))  # defaultdict
+key_a, value_a = list(num_collaborations.items())[0]
+print(type(key_a), type(value_a))  # str, defaultdict
+key_b, value_b = list(value_a.items())[0]
+print(type(key_b), type(value_b))  # str, int
+# Mostrar las colaboraciones
+print(num_collaborations)
+print()
+print()
+
+
+#B.4.PRINT SELECCIONADO
+#Lo mismo que arriba pero solo para un n minimo de colaboraciones
+def print_actor_collaborations(actor_director_count, min_collaborations):
+    """
+    Muestra los actores y directores que han colaborado un número mínimo de veces.
+
+    Parameters
+    ----------
+    actor_director_count : defaultdict
+        Diccionario que asocia cada actor principal con un director y el número 
+        de colaboraciones.
+    min_collaborations : int
+        Número mínimo de colaboraciones para incluir en el resultado.
+
+    Returns
+    -------
+    None.
+
+    """
+    result = {}
+    # Iterar sobre el conteo de colaboraciones
+    for actor, directors in actor_director_count.items():
+        # Crear una lista para las colaboraciones que superan el mínimo
+        collaborations = [(director, count) for director, count in directors.items() if count >= min_collaborations]
+        # Solo añadir el actor al resultado si tiene colaboraciones que superen el mínimo
+        if collaborations:
+            result[actor] = collaborations
+    # Imprimir el resultado en el formato deseado
+    for actor, collaborations in result.items():
+        print(f"{actor} -> {collaborations}")
+# Prueba de funcionamiento
+print_actor_collaborations(actor_directors(main_dict_data), 5)
+print()
+print()
+
+
